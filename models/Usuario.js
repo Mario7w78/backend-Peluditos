@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
+import { Orden } from "./Orden.js";
+import { Carrito } from "./Carrito.js";
 
 
 export const Usuario = sequelize.define("Usuario", {
@@ -16,7 +18,7 @@ export const Usuario = sequelize.define("Usuario", {
     },
     admin: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true
+        defaultValue: false
     },
     dni:{
         type: DataTypes.INTEGER,
@@ -25,7 +27,7 @@ export const Usuario = sequelize.define("Usuario", {
         type: DataTypes.STRING,
     },
 
-    fecharegistro:{
+    fecha_registro:{
         type:DataTypes.DATE,
         defaultValue: DataTypes.NOW
     },
@@ -37,3 +39,13 @@ export const Usuario = sequelize.define("Usuario", {
     freezeTableName: true
 })
 
+
+Usuario.hasMany(Orden, {
+  foreignKey: "usuarioId",
+  as: "ordenes"
+});
+
+Usuario.hasOne(Carrito,{
+    foreignKey: "usuarioId",
+    as: "carrito"
+})

@@ -17,7 +17,7 @@ export const Producto = sequelize.define("Producto", {
     descripcion:{
         type: DataTypes.STRING
     },
-    precio:{
+    precio_Unitario:{
         type: DataTypes.DOUBLE
     },
     stock:{
@@ -31,11 +31,8 @@ export const Producto = sequelize.define("Producto", {
 })
 
 Producto.belongsTo(Categoria,{
-    foreignKey: "productoid",
-    targetKey: "id",
+    foreignKey: "categoriaId",
+    as: "categoria"
 })
 
-Categoria.hasMany(Producto,{
-    foreignKey: "cateogoriaid",
-    targetKey: "id",
-})
+

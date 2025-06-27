@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../config/database.js";
-
+import { Producto } from "./Producto.js";
 
 export const Categoria = sequelize.define("Categoria", {
     id: {
@@ -16,12 +16,7 @@ export const Categoria = sequelize.define("Categoria", {
     freezeTableName: true
 })
 
-Producto.belongsTo(Categoria,{
-    foreignKey: "productoid",
-    targetKey: "id",
-})
-
 Categoria.hasMany(Producto,{
-    foreignKey: "cateogoriaid",
-    targetKey: "id",
+    foreignKey: "cateogoria_id",
+    as: "productos"
 })
