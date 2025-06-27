@@ -1,24 +1,26 @@
 import express from 'express';
 import cors from 'cors';
-import { sequelize } from './config/database';
-import { Carrito } from './models/Carrito';
-import { Categoria } from './models/Categoria';
-import { Producto } from './models/Producto';
-import { Usuario } from './models/Usuario';
-import { Orden } from './models/Orden';
-import { DetalleCarrito } from './models/detalleCarrito';
-import { DetalleOrden } from './models/detalleOrden';
+import { sequelize } from './config/database.js';
+import { Usuario } from './models/Usuario.js';
+import { Carrito } from './models/Carrito.js';
+import { Categoria } from './models/Categoria.js';
+import { Producto } from './models/Producto.js';
+import { Orden } from './models/Orden.js';
+import { DetalleCarrito } from './models/detalleCarrito.js';
+import { DetalleOrden } from './models/detalleOrden.js';
 
 
 const app = express();
 const port = 3000;
+app.use(express.json());
+app.use(cors())
 
 async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    //await sequelize.sync({force: true});
-    await sequelize.sync();
+    await sequelize.sync({force: true});
+    //await sequelize.sync();
   } catch (e) {
 
     console.log("Ocurrio un error con lac conexion", e);
@@ -26,13 +28,23 @@ async function verificarAndSyncDatabase() {
   }
 }
 
+//iniciar servidor
+
+app.listen(port, ()=>{
+    console.log(`Servidor activo en puerto localhost:${port}`)
+    verificarAndSyncDatabase();
+
+})
+
+
+
 // USUARIO
 
 // CREAR USUARIO
 app.post("/usuario", async (req, res) => {
   const data = req.body;
 
-  if (data.nombre && data.edad && data.dni) {
+  if (data.nombre && data.fechaNacimiento && data.dni && data.password) {
     const newuser = await Usuario.create(data);
     res.status(200).json(newuser);
   } else {
@@ -293,12 +305,4 @@ app.delete("/orden/:ordenId", async (req,res)=>{
 })
 
 
-
-//iniciar servidor
-
-app.listen(port, ()=>{
-    console.log(`Servidor activo en puerto localhost:${port}`)
-    verificarAndSyncDatabase();
-
-})
 

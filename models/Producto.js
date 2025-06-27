@@ -30,9 +30,5 @@ export const Producto = sequelize.define("Producto", {
     freezeTableName: true
 })
 
-Producto.belongsTo(Categoria,{
-    foreignKey: "categoriaId",
-    as: "categoria"
-})
 
 

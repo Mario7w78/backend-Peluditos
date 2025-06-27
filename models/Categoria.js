@@ -17,6 +17,11 @@ export const Categoria = sequelize.define("Categoria", {
 })
 
 Categoria.hasMany(Producto,{
-    foreignKey: "cateogoria_id",
+    foreignKey: "categoria_id",
     as: "productos"
+})
+
+Producto.belongsTo(Categoria,{
+    foreignKey: "categoriaId",
+    as: "categoria"
 })

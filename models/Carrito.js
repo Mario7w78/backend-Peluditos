@@ -14,6 +14,11 @@ export const Carrito = sequelize.define("Carrito", {
 })
 
 
+Usuario.hasOne(Carrito,{
+    foreignKey: "usuarioId",
+    as: "carrito"
+})
+
 Carrito.belongsTo(Usuario, {
   foreignKey: "usuarioId",
   as: "usuario"

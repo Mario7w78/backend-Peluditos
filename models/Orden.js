@@ -22,6 +22,10 @@ export const Orden = sequelize.define("Orden", {
     freezeTableName: true
 })
 
+Usuario.hasMany(Orden, {
+  foreignKey: "usuarioId",
+  as: "ordenes"
+});
 
 Orden.belongsTo(Usuario, {
   foreignKey: "usuarioId",
