@@ -26,13 +26,19 @@ export const Usuario = sequelize.define("Usuario", {
         type: DataTypes.STRING,
     },
 
-    fecha_registro:{
+    fechaRegistro:{
         type:DataTypes.DATE,
         defaultValue: DataTypes.NOW
     },
     canlogin:{
         type: DataTypes.BOOLEAN,
         defaultValue: true
+    },
+    email:{
+        type: DataTypes.STRING
+    },
+    rol:{
+        type: DataTypes.STRING
     }
 },{
     freezeTableName: true

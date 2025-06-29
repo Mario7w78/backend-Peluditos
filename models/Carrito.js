@@ -8,7 +8,10 @@ export const Carrito = sequelize.define("Carrito", {
         primaryKey: true,
         autoIncrement: true,
     },
-    
+    total:{
+        type: DataTypes.DOUBLE,
+        defaultValue: 0
+    }
 },{
     freezeTableName: true
 })
