@@ -20,10 +20,25 @@ async function verificarAndSyncDatabase() {
     console.log("Conexion exitosa con la BD");
     await sequelize.sync({ force: true });
     //await sequelize.sync();
+    
+    // Crear usuario base si no existe
+    await Usuario.findOrCreate({
+        where: { email: 'admin@peluditos.com' },
+        defaults: {
+            nombre: 'Admin',
+            fechaNacimiento: new Date(1990, 0, 1),
+            admin: true,
+            dni: 12345678,
+            password: 'admin123', // Hashea en producción
+            rol: 'admin'
+        }
+    });
+    console.log('Usuario base verificado o creado');
   } catch (e) {
     console.log("Ocurrio un error con lac conexion", e);
   }
 }
+
 
 //iniciar servidor
 
@@ -65,6 +80,28 @@ app.get("/usuario/:id", async (req, res) => {
     res.json(userData);
   } else {
     res.status(404).send("No se pudo encontrar al usuario");
+  }
+});
+
+//OBTENER USUARIO POR EMAIL Y PASSWORD (LOGIN)
+app.get("/usuario/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (email && password) {
+    const userData = await Usuario.findOne({
+      where: {
+        email: email,
+        password: password,
+      },
+    });
+
+    if (userData) {
+      res.json(userData);
+    } else {
+      res.status(404).send("No se pudo encontrar al usuario");
+    }
+  } else {
+    res.status(400).send("Faltan datos requeridos");
   }
 });
 
