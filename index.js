@@ -18,8 +18,8 @@ async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    await sequelize.sync({ force: true });
-    //await sequelize.sync();
+    //await sequelize.sync({ force: true });
+    await sequelize.sync();
     
     // Crear usuario base si no existe
     await Usuario.findOrCreate({
