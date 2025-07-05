@@ -14,6 +14,10 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
+
+
+
+
 async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
@@ -84,7 +88,7 @@ app.get("/usuario/:id", async (req, res) => {
 });
 
 //OBTENER USUARIO POR EMAIL Y PASSWORD (LOGIN)
-app.get("/usuario/login", async (req, res) => {
+app.post("/usuario/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (email && password) {
@@ -189,8 +193,8 @@ app.get("/categoria/:id/producto", async (req, res) => {
   }
 });
 
-//OBTENER PRODUCTOS POR NOMBRE
-app.get("/producto/:nom", async (req, res) => {
+//OBTENER PRODUCTOS POR NOMBRE (ruta específica para evitar conflicto)
+app.get("/producto/nombre/:nom", async (req, res) => {
   try {
     const data = await Producto.findOne({
       where: {
@@ -206,7 +210,7 @@ app.get("/producto/:nom", async (req, res) => {
 //OBTENER PRODUCTO POR ID
 app.get("/producto/:id", async (req, res) => {
   try {
-    const id = req.params.id();
+    const id = req.params.id;
     const data = await Producto.findOne({
       where: {
         id: id,
@@ -217,6 +221,32 @@ app.get("/producto/:id", async (req, res) => {
     res.status(404).send(e);
   }
 });
+
+import { Op } from "sequelize"; // Asegúrate que esté importado
+
+// BÚSQUEDA POR NOMBRE PARCIAL
+app.get("/producto/buscar/:nom", async (req, res) => {
+  try {
+    const productos = await Producto.findAll({
+      where: {
+        nombre: {
+          [Op.iLike]: `%${req.params.nom}%`, // búsqueda parcial (insensible a mayúsculas)
+        },
+      },
+    });
+
+    if (productos.length === 0) {
+      return res.status(404).json({ mensaje: "No se encontraron productos." });
+    }
+
+    res.json(productos);
+  } catch (e) {
+    console.error("Error al buscar producto:", e);
+    res.status(500).json({ mensaje: "Error en la búsqueda." });
+  }
+});
+
+
 
 //CATEGORIA
 
@@ -446,5 +476,63 @@ app.delete("/orden/:ordenId", async (req, res) => {
     res.send("Orden cancelada correctamente")
   }catch(e){
     res.send('No se encontro la orden')
+  }
+});
+
+// OBTENER ORDEN POR ID
+app.get("/orden/detalle/:ordenId", async (req, res) => {
+  try {
+    const orden = await Orden.findOne({
+      where: { id: req.params.ordenId },
+      include: {
+        model: Producto,
+        as: "productos",
+      },
+    });
+    if (!orden) {
+      return res.status(404).json({ mensaje: "Orden no encontrada" });
+    }
+    res.json(orden);
+  } catch (e) {
+    res.status(500).json({ mensaje: "Error al obtener la orden" });
+  }
+});
+
+// ACTUALIZAR USUARIO GENERAL (nombre, email, contraseña, dirección, etc.)
+app.put("/usuario/:id", async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+
+  try {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).send("Usuario no encontrado");
+    }
+
+    await usuario.update(data);
+    res.status(200).json(usuario);
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).send("Error del servidor");
+  }
+});
+
+// ACTUALIZAR CANTIDAD DE UN PRODUCTO EN EL CARRITO
+app.put("/carrito/:carritoId/producto/:productoId", async (req, res) => {
+  const { carritoId, productoId } = req.params;
+  const { cantidad, precioUnitario } = req.body;
+  try {
+    // Buscar el detalle del producto en el carrito
+    const detalle = await DetalleCarrito.findOne({
+      where: { CarritoId: carritoId, ProductoId: productoId },
+    });
+    if (!detalle) {
+      return res.status(404).json({ error: "Producto no encontrado en el carrito" });
+    }
+    await detalle.update({ cantidad, subtotal: cantidad * precioUnitario });
+    await recalcularTotal(carritoId);
+    res.json({ mensaje: "Cantidad actualizada correctamente" });
+  } catch (e) {
+    res.status(500).json({ error: "Error al actualizar la cantidad" });
   }
 });
