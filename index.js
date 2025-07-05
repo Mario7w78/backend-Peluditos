@@ -43,7 +43,7 @@ async function verificarAndSyncDatabase() {
 //iniciar servidor
 
 app.listen(port, () => {
-  console.log(`Servidor activo en puerto localhost:${port}`);
+  console.log(`Servidor activo en puerto ${port}`);
   verificarAndSyncDatabase();
 });
 
