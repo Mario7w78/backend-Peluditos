@@ -84,7 +84,7 @@ app.get("/usuario/:id", async (req, res) => {
 });
 
 //OBTENER USUARIO POR EMAIL Y PASSWORD (LOGIN)
-app.get("/usuario/login", async (req, res) => {
+app.post("/usuario/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (email && password) {
