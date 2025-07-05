@@ -12,7 +12,23 @@ import { DetalleOrden } from "./models/detalleOrden.js";
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(express.json());
-app.use(cors());
+
+// Configuración de CORS para desarrollo y producción
+const allowedOrigins = [
+  'http://localhost:5173', // Frontend local
+  'https://peluditos-frontend.azurewebsites.net' // Cambia esto por tu dominio real en producción
+];
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (como Postman) o desde orígenes permitidos
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true
+}));
 
 
 
@@ -535,4 +551,28 @@ app.put("/carrito/:carritoId/producto/:productoId", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: "Error al actualizar la cantidad" });
   }
+});
+
+// RECUPERAR CONTRASEÑA (simulado)
+app.post("/usuario/recuperar", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ mensaje: "Falta el email" });
+  const usuario = await Usuario.findOne({ where: { email } });
+  if (!usuario) {
+    // Por seguridad, no revelar si el email existe o no
+    return res.json({ mensaje: "Si el correo es válido, recibirás un enlace para restablecer tu contraseña." });
+  }
+  // Aquí deberías generar un token y enviarlo por correo (simulado)
+  // Por ahora solo responde OK
+  return res.json({ mensaje: "Si el correo es válido, recibirás un enlace para restablecer tu contraseña." });
+});
+
+// ENDPOINT PARA CAMBIAR CONTRASEÑA CON TOKEN (simulado)
+app.post("/usuario/reset-password", async (req, res) => {
+  const { email, newPassword } = req.body;
+  if (!email || !newPassword) return res.status(400).json({ mensaje: "Faltan datos" });
+  const usuario = await Usuario.findOne({ where: { email } });
+  if (!usuario) return res.status(404).json({ mensaje: "Usuario no encontrado" });
+  await usuario.update({ password: newPassword });
+  res.json({ mensaje: "Contraseña actualizada correctamente" });
 });
