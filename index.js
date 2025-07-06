@@ -277,7 +277,7 @@ app.post("/carrito/crear/:usuarioId", async (req, res) => {
   const usuarioId = req.params.usuarioId;
   const usuario = await Usuario.findByPk(parseInt(usuarioId));
   if (usuario) {
-    const nuevo = await Carrito.create({ usuarioId: usuarioId });
+    const nuevo = await Carrito.findOrCreate({ usuarioId: usuarioId });
     res.json(nuevo);
   } else {
     res.status(404).send("No existe el usuario");
@@ -345,7 +345,7 @@ app.delete("/carrito/:carritoId/producto/:productoId", async (req, res) => {
   }
 });
 
-//AGREGAR PRODUCTO A CARRITO
+//CALCULAR TOTAL DEL CARRITO
 
 async function recalcularTotal(carritoId) {
   const detalles = await DetalleCarrito.findAll({
@@ -359,6 +359,7 @@ async function recalcularTotal(carritoId) {
 
   await Carrito.update({ total }, { where: { id: carritoId } });
 }
+//AGREGAR PRODUCTO A CARRITO
 
 app.post("/carrito/:carritoId/producto", async (req, res) => {
   const { carritoId } = req.params;
