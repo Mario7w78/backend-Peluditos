@@ -66,6 +66,7 @@ app.post("/usuario", async (req, res) => {
     data.rol
   ) {
     const newuser = await Usuario.create(data);
+    await Carrito.create({usuarioId: newuser.id})
     res.status(200).json(newuser);
   } else {
     res.status(400).send("Faltan datos requeridos/no se pudo crear");
