@@ -538,3 +538,31 @@ app.put("/carrito/:carritoId/producto/:productoId", async (req, res) => {
     res.status(500).json({ error: "Error al actualizar la cantidad" });
   }
 });
+
+
+// OBTENER DETALLE DE CARRITO POR ID DEL CARRITO
+app.get("/carrito/:carritoId/detalle", async (req, res) => {
+  try {
+    const carrito = await Carrito.findByPk(req.params.carritoId, {
+      include: [
+        {
+          model: Producto,
+          as: "productos",
+          through: {
+            model: DetalleCarrito,
+            attributes: ["cantidad", "precioUnitario", "subtotal"]
+          }
+        }
+      ]
+    });
+
+    if (!carrito) {
+      return res.status(404).json({ mensaje: "Carrito no encontrado" });
+    }
+
+    res.json(carrito);
+  } catch (e) {
+    console.error("Error al obtener detalles del carrito:", e);
+    res.status(500).json({ mensaje: "Error al obtener los detalles del carrito" });
+  }
+});
