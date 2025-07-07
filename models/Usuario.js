@@ -12,6 +12,30 @@ export const Usuario = sequelize.define("Usuario", {
     nombre: {
         type: DataTypes.STRING
     },
+    nombresCompletos: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
+    apellidosCompletos: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
+    direccion: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
+    ciudad: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
+    departamento: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
+    telefono: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
     fechaNacimiento: {
         type: DataTypes.DATE
     },
