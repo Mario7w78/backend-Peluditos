@@ -28,6 +28,10 @@ export const Usuario = sequelize.define("Usuario", {
         type: DataTypes.STRING,
         defaultValue: "Sin especificar"
     },
+    codigoPostal: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },
     departamento: {
         type: DataTypes.STRING,
         defaultValue: "Sin especificar"
