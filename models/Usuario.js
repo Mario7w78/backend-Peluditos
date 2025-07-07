@@ -40,6 +40,10 @@ export const Usuario = sequelize.define("Usuario", {
         type: DataTypes.STRING,
         defaultValue: "Sin especificar"
     },
+    metodoPago: {
+        type: DataTypes.STRING,
+        defaultValue: "Sin especificar"
+    },    
     fechaNacimiento: {
         type: DataTypes.DATE
     },
