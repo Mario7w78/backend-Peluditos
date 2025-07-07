@@ -449,7 +449,7 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
       where: { CarritoId: carrito.id },
     });
 
-    res.send("Orden generada correctamente desde el carrito.");
+    res.json({id: nuevaOrden.id});
   } catch (error) {
     console.error(error);
     res
