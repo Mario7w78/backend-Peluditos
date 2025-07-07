@@ -127,6 +127,21 @@ app.delete("/usuario/:id", async (req, res) => {
   }
 });
 
+app.put("/usuario/:id", async (req, res) => {
+  const data = req.body
+  try {
+    const id = req.params.id;
+    await Usuario.update(data,{
+      where: {
+        id: id,
+      },
+    });
+    res.status(200).send("Usuario Eliminado correctamente");
+  } catch (e) {
+    res.status(404).send(e);
+  }
+});
+
 //DESACTIVAR USUARIO (NO VA A PODER LOGUEARSE)
 app.put("/usuario/:id/desactivar", async (req, res) => {
   const id = req.params.id;
