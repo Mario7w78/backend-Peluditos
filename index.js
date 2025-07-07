@@ -14,35 +14,30 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-
-
-
-
 async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
     //await sequelize.sync({ force: true });
     await sequelize.sync();
-    
+
     // Crear usuario base si no existe
     await Usuario.findOrCreate({
-        where: { email: 'admin@peluditos.com' },
-        defaults: {
-            nombre: 'Admin',
-            fechaNacimiento: new Date(1990, 0, 1),
-            admin: true,
-            dni: 12345678,
-            password: 'admin123', // Hashea en producción
-            rol: 'admin'
-        }
+      where: { email: "admin@peluditos.com" },
+      defaults: {
+        nombre: "Admin",
+        fechaNacimiento: new Date(1990, 0, 1),
+        admin: true,
+        dni: 12345678,
+        password: "admin123", // Hashea en producción
+        rol: "admin",
+      },
     });
-    console.log('Usuario base verificado o creado');
+    console.log("Usuario base verificado o creado");
   } catch (e) {
     console.log("Ocurrio un error con lac conexion", e);
   }
 }
-
 
 //iniciar servidor
 
@@ -66,7 +61,7 @@ app.post("/usuario", async (req, res) => {
     data.rol
   ) {
     const newuser = await Usuario.create(data);
-    await Carrito.create({usuarioId: newuser.id})
+    await Carrito.create({ usuarioId: newuser.id });
     res.status(200).json(newuser);
   } else {
     res.status(400).send("Faltan datos requeridos/no se pudo crear");
@@ -247,8 +242,6 @@ app.get("/producto/buscar/:nom", async (req, res) => {
   }
 });
 
-
-
 //CATEGORIA
 
 //OBTENER CATEGORIA
@@ -393,10 +386,10 @@ app.post("/carrito/:carritoId/producto", async (req, res) => {
 });
 
 //ORDEN
-app.get("/orden", async(req, res)=>{
+app.get("/orden", async (req, res) => {
   const ordenes = await Orden.findAll();
-  res.json(ordenes) 
-})
+  res.json(ordenes);
+});
 
 //CREAR ORDEN DESDE EL CARRITO
 
@@ -471,13 +464,13 @@ app.get("/orden/:usuarioId", async (req, res) => {
 //CANCELAR ORDEN DE LA ORDEN
 
 app.delete("/orden/:ordenId", async (req, res) => {
-  try{
+  try {
     await Orden.destroy({
       where: { id: req.params.ordenId },
     });
-    res.send("Orden cancelada correctamente")
-  }catch(e){
-    res.send('No se encontro la orden')
+    res.send("Orden cancelada correctamente");
+  } catch (e) {
+    res.send("No se encontro la orden");
   }
 });
 
@@ -519,27 +512,6 @@ app.put("/usuario/:id", async (req, res) => {
   }
 });
 
-// ACTUALIZAR CANTIDAD DE UN PRODUCTO EN EL CARRITO
-app.put("/carrito/:carritoId/producto/:productoId", async (req, res) => {
-  const { carritoId, productoId } = req.params;
-  const { cantidad, precioUnitario } = req.body;
-  try {
-    // Buscar el detalle del producto en el carrito
-    const detalle = await DetalleCarrito.findOne({
-      where: { CarritoId: carritoId, ProductoId: productoId },
-    });
-    if (!detalle) {
-      return res.status(404).json({ error: "Producto no encontrado en el carrito" });
-    }
-    await detalle.update({ cantidad, subtotal: cantidad * precioUnitario });
-    await recalcularTotal(carritoId);
-    res.json({ mensaje: "Cantidad actualizada correctamente" });
-  } catch (e) {
-    res.status(500).json({ error: "Error al actualizar la cantidad" });
-  }
-});
-
-
 // OBTENER DETALLE DE CARRITO POR ID DEL CARRITO
 app.get("/carrito/:carritoId/detalle", async (req, res) => {
   try {
@@ -550,10 +522,10 @@ app.get("/carrito/:carritoId/detalle", async (req, res) => {
           as: "productos",
           through: {
             model: DetalleCarrito,
-            attributes: ["cantidad", "precioUnitario", "subtotal"]
-          }
-        }
-      ]
+            attributes: ["id", "cantidad", "precioUnitario", "subtotal"],
+          },
+        },
+      ],
     });
 
     if (!carrito) {
@@ -563,6 +535,43 @@ app.get("/carrito/:carritoId/detalle", async (req, res) => {
     res.json(carrito);
   } catch (e) {
     console.error("Error al obtener detalles del carrito:", e);
-    res.status(500).json({ mensaje: "Error al obtener los detalles del carrito" });
+    res
+      .status(500)
+      .json({ mensaje: "Error al obtener los detalles del carrito" });
+  }
+});
+
+app.put("/carrito/detalle/:detalleId", async (req, res) => {
+  try {
+    const { detalleId } = req.params;
+    const { cantidad } = req.body;
+
+    if (!cantidad || cantidad <= 0) {
+      return res.status(400).json({
+        mensaje: "La cantidad debe ser un número positivo",
+      });
+    }
+
+    // Buscar el detalle del carrito
+    const detalleCarrito = await DetalleCarrito.findByPk(detalleId);
+
+    if (!detalleCarrito) {
+      return res.status(404).json({
+        mensaje: "Detalle del carrito no encontrado",
+      });
+    }
+
+    const nuevoSubtotal = cantidad * detalleCarrito.precioUnitario;
+
+    // Actualizar la cantidad y el subtotal
+    await detalleCarrito.update({
+      cantidad: cantidad,
+      subtotal: nuevoSubtotal,
+    });
+
+
+    res.send("Cantidad actualizada exitosamente");
+  } catch (e) {
+    res.status(500).send("Error al actualizar la cantidad del detalle del carrito");
   }
 });
