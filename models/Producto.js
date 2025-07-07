@@ -12,7 +12,7 @@ export const Producto = sequelize.define("Producto", {
         type: DataTypes.STRING
     },
     presentacion:{
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING
     },
     descripcion:{
         type: DataTypes.STRING
@@ -24,7 +24,7 @@ export const Producto = sequelize.define("Producto", {
         type: DataTypes.INTEGER
     },
     imgurl:{
-        type: DataTypes.STRING
+        type: DataTypes.TEXT
     }
 },{
     freezeTableName: true
