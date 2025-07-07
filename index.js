@@ -33,6 +33,7 @@ async function verificarAndSyncDatabase() {
         rol: "admin",
       },
     });
+    await Carrito.create({ usuarioId: 1 });
     console.log("Usuario base verificado o creado");
   } catch (e) {
     console.log("Ocurrio un error con lac conexion", e);
