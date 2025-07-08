@@ -403,8 +403,21 @@ app.post("/carrito/:carritoId/producto", async (req, res) => {
 
 //ORDEN
 app.get("/orden", async (req, res) => {
-  const ordenes = await Orden.findAll();
-  res.json(ordenes);
+  try {
+    const ordenes = await Orden.findAll({
+      include: {
+        model: Producto,
+        as: "productos", 
+        through: {
+          attributes: ["cantidad", "precioUnitario", "subtotal"], 
+        },
+      },
+    });
+    res.json(ordenes);
+  } catch (e) {
+    console.error("Error al obtener órdenes con productos:", e);
+    res.status(500).send();
+  }
 });
 
 //CREAR ORDEN DESDE EL CARRITO
