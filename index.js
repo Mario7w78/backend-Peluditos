@@ -188,31 +188,31 @@ app.get("/producto", async (req, res) => {
 });
 
 
-//OBTENER PRODUCTOS MAS VENDIDOS
-app.get("/producto/masvendido", async (req, res) => {
+//OBTENER PRODUCTOS MAS VENDIDOS DE TODAS LAS ORDENES
+app.get("/masvendidos", async (req, res) => {
   try {
-    const [result] = await sequelize.query(`
-      SELECT 
-        p.id,
-        p.nombre,
-        p.precioUnitario,
-        p.imgurl,
-        SUM(do.cantidad) AS totalVendido
-      FROM "DetalleOrden" do
-      JOIN "Producto" p ON p.id = do."ProductoId"
-      GROUP BY p.id
-      ORDER BY totalVendido DESC
-      LIMIT 10
-    `);
+    const resultados = await DetalleOrden.findAll({
+      attributes: [
+        "ProductoId",
+        [sequelize.fn("SUM", sequelize.col("cantidad")), "totalVendidos"],
+      ],
+      group: ["ProductoId"],
+      order: [[sequelize.fn("SUM", sequelize.col("cantidad")), "DESC"]],
+      include: [
+        {
+          model: Producto,
+          as: "producto",
+          attributes: ["nombre", "imgurl", "precioUnitario"],
+        },
+      ],
+    });
 
-    res.json(result);
+    res.json(resultados);
   } catch (e) {
     console.error("Error al obtener productos más vendidos:", e);
     res.status(500).send("Error al obtener productos más vendidos");
   }
 });
-
-
 
 //OBTENER PRODUCTOS POR CATEGORIA
 app.get("/categoria/:id/producto", async (req, res) => {
