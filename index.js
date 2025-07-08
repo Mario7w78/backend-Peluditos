@@ -18,7 +18,7 @@ async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     //await sequelize.sync();
 
     // Crear usuario base si no existe
@@ -186,6 +186,14 @@ app.get("/producto", async (req, res) => {
   const productos = await Producto.findAll();
   res.status(200).json(productos);
 });
+
+
+//OBTENER PRODUCTOS MAS VENDIDOS
+app.get("/producto/masvendido", async (req, res) => {
+  const productos = await Producto.findAll();
+  res.status(200).json(productos);
+});
+
 
 //OBTENER PRODUCTOS POR CATEGORIA
 app.get("/categoria/:id/producto", async (req, res) => {
