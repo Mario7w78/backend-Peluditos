@@ -18,7 +18,7 @@ async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     //await sequelize.sync();
 
     // Crear usuario base si no existe
@@ -191,28 +191,27 @@ app.get("/producto", async (req, res) => {
 //OBTENER PRODUCTOS MAS VENDIDOS
 app.get("/producto/masvendido", async (req, res) => {
   try {
+    const [result] = await sequelize.query(`
+      SELECT 
+        p.id,
+        p.nombre,
+        p.precioUnitario,
+        p.imgurl,
+        SUM(do.cantidad) AS totalVendido
+      FROM "DetalleOrden" do
+      JOIN "Producto" p ON p.id = do."ProductoId"
+      GROUP BY p.id
+      ORDER BY totalVendido DESC
+      LIMIT 10
+    `);
 
-    const productosMasVendidos = await DetalleOrden.findAll({
-      attributes: [
-        "ProductoId",
-        [sequelize.fn("SUM", sequelize.col("cantidad")), "totalVendido"],
-      ],
-      group: ["ProductoId"],
-      order: [[sequelize.literal("totalVendido"), "DESC"]],
-      limit: 10, 
-      include: [
-        {
-          model: Producto,
-          attributes: ["id", "nombre", "precioUnitario", "imgurl"],
-        },
-      ],
-    });
-
-    res.json(productosMasVendidos);
-  } catch (error) {
-    res.status(500).send(error.message);
+    res.json(result);
+  } catch (e) {
+    console.error("Error al obtener productos más vendidos:", e);
+    res.status(500).send("Error al obtener productos más vendidos");
   }
 });
+
 
 
 //OBTENER PRODUCTOS POR CATEGORIA
