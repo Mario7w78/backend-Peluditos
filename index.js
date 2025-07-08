@@ -190,8 +190,28 @@ app.get("/producto", async (req, res) => {
 
 //OBTENER PRODUCTOS MAS VENDIDOS
 app.get("/producto/masvendido", async (req, res) => {
-  const productos = await Producto.findAll();
-  res.status(200).json(productos);
+  try {
+
+    const productosMasVendidos = await DetalleOrden.findAll({
+      attributes: [
+        "ProductoId",
+        [sequelize.fn("SUM", sequelize.col("cantidad")), "totalVendido"],
+      ],
+      group: ["ProductoId"],
+      order: [[sequelize.literal("totalVendido"), "DESC"]],
+      limit: 10, 
+      include: [
+        {
+          model: Producto,
+          attributes: ["id", "nombre", "precioUnitario", "imgurl"],
+        },
+      ],
+    });
+
+    res.json(productosMasVendidos);
+  } catch (error) {
+    res.status(500).send("Error al obtener productos más vendidos");
+  }
 });
 
 
@@ -461,7 +481,14 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
     if (!carrito || carrito.productos.length === 0) {
       return res
         .status(400)
-        .json({ error: "El carrito está vacío o no existe." });
+        .send("Error el carrito no existe")
+    }
+
+    for (const producto of carrito.productos) {
+      const cantidadComprada = producto.DetalleCarrito.cantidad;
+      if (producto.stock < cantidadComprada) {
+        return res.status(400).send(`No hay suficiente stock para el producto ${producto.nombre}. Stock disponible: ${producto.stock}, cantidad solicitada: ${cantidadComprada}`)
+      }
     }
 
     const nuevaOrden = await Orden.create({
@@ -469,30 +496,35 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
       fecha: new Date(),
     });
 
+
     for (const producto of carrito.productos) {
+      const cantidadComprada = producto.DetalleCarrito.cantidad;
+
       await nuevaOrden.addProducto(producto.id, {
         through: {
-          cantidad: producto.DetalleCarrito.cantidad,
+          cantidad: cantidadComprada,
           precioUnitario: producto.DetalleCarrito.precioUnitario,
           subtotal: producto.DetalleCarrito.subtotal,
         },
       });
+
+      producto.stock -= cantidadComprada;
+      await producto.save();
     }
 
-    await recalcularTotalOrden(nuevaOrden.id)
+    await recalcularTotalOrden(nuevaOrden.id);
 
     await DetalleCarrito.destroy({
       where: { CarritoId: carrito.id },
     });
 
-    res.json({id: nuevaOrden.id});
+    res.json({ id: nuevaOrden.id });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .send("Error al generar la orden desde el carrito.");
+    res.status(500).send("Error al generar la orden desde el carrito.");
   }
 });
+
 
 //OBTENER ORDENES POR USUARIO
 app.get("/orden/:usuarioId", async (req, res) => {
