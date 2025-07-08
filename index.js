@@ -420,8 +420,7 @@ app.get("/orden", async (req, res) => {
   }
 });
 
-//CREAR ORDEN DESDE EL CARRITO
-
+// Calcular total de la orden
 async function recalcularTotalOrden(ordenId) {
   const detalles = await DetalleOrden.findAll({
     where: { OrdenId: ordenId },
@@ -432,9 +431,10 @@ async function recalcularTotalOrden(ordenId) {
     return suma + subtotal;
   }, 0);
 
-  await DetalleOrden.update({ total }, { where: { id: ordenId } });
+  await Orden.update({ total }, { where: { id: ordenId } });
 }
 
+//CREAR ORDEN DESDE EL CARRITO
 app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
   const { usuarioId } = req.params;
 
