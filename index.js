@@ -18,7 +18,7 @@ async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     //await sequelize.sync();
 
     // Crear usuario base si no existe
@@ -210,7 +210,7 @@ app.get("/producto/masvendido", async (req, res) => {
 
     res.json(productosMasVendidos);
   } catch (error) {
-    res.status(500).send("Error al obtener productos más vendidos");
+    res.status(500).send("Error al obtener productos más vendidos", error.message);
   }
 });
 
