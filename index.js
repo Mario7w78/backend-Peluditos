@@ -422,6 +422,19 @@ app.get("/orden", async (req, res) => {
 
 //CREAR ORDEN DESDE EL CARRITO
 
+async function recalcularTotalOrden(ordenId) {
+  const detalles = await DetalleOrden.findAll({
+    where: { OrdenId: ordenId },
+  });
+
+  const total = detalles.reduce((suma, detalle) => {
+    const subtotal = parseFloat(detalle.subtotal) || 0;
+    return suma + subtotal;
+  }, 0);
+
+  await DetalleOrden.update({ total }, { where: { id: ordenId } });
+}
+
 app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
   const { usuarioId } = req.params;
 
@@ -457,6 +470,8 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
         },
       });
     }
+
+    await recalcularTotalOrden(nuevaOrden.id)
 
     await DetalleCarrito.destroy({
       where: { CarritoId: carrito.id },

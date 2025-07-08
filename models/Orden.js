@@ -16,6 +16,11 @@ export const Orden = sequelize.define("Orden", {
     estado:{
         type: DataTypes.STRING,
         defaultValue: 'Pendiente',
+    },
+
+    total:{
+        type: DataTypes.DOUBLE,
+        defaultValue: 0
     }
     
 },{
