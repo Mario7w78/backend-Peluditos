@@ -210,7 +210,7 @@ app.get("/producto/masvendido", async (req, res) => {
 
     res.json(productosMasVendidos);
   } catch (error) {
-    res.status(500).send("Error al obtener productos más vendidos", error.message);
+    res.status(500).send(error.message);
   }
 });
 
