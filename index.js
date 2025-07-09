@@ -199,10 +199,7 @@ app.delete("/producto/:id", async (req, res) => {
     res.status(200).json({ mensaje: "Producto eliminado correctamente!!" });
   } catch (e) {
     res.status(200).json({ mensaje: "Producto No encontrado / No se pudo eliminar correctamente" });
-
   }
-
-
 });
 
 // MODIFICAR PRODUCTO
@@ -267,7 +264,7 @@ app.get("/producto/buscar/:buscar", async (req, res) => {
     // Si es un número, buscar por CategoriaId
     if (!isNaN(buscar)) {
       productos = await Producto.findAll({
-        where: { CategoriaId: parseInt(buscar) },
+        where: { categoriaId: parseInt(buscar) },
         include: {
           model: Categoria,
           as: "categoria",
