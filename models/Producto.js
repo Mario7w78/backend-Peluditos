@@ -25,6 +25,10 @@ export const Producto = sequelize.define("Producto", {
     },
     imgurl:{
         type: DataTypes.TEXT
+    },
+    nventas: {
+       type: DataTypes.INTEGER,
+       defaultValue: 0 
     }
 },{
     freezeTableName: true

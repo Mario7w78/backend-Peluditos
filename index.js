@@ -18,7 +18,7 @@ async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ force: true });
     //await sequelize.sync();
 
     // Crear usuario base si no existe
@@ -29,7 +29,7 @@ async function verificarAndSyncDatabase() {
         fechaNacimiento: new Date(1990, 0, 1),
         admin: true,
         dni: 12345678,
-        password: "admin123", // Hashea en producción
+        password: "admin123", 
         rol: "admin",
       },
     });
@@ -47,7 +47,7 @@ app.listen(port, () => {
   verificarAndSyncDatabase();
 });
 
-// USUARIO
+// USUARIO ----------------------------------------------------------------------------------------------------------------
 
 // CREAR USUARIO
 app.post("/usuario", async (req, res) => {
@@ -61,11 +61,11 @@ app.post("/usuario", async (req, res) => {
     data.email &&
     data.rol
   ) {
-    const newuser = await Usuario.create(data);
-    await Carrito.create({ usuarioId: newuser.id });
-    res.status(200).json(newuser);
+    const nuevoUsuario = await Usuario.create(data);
+    await Carrito.create({ usuarioId: nuevoUsuario.id });
+    res.status(200).json(nuevoUsuario);
   } else {
-    res.status(400).send("Faltan datos requeridos/no se pudo crear");
+    res.status(400).json({mensaje: "Faltan datos requeridos/no se pudo crear"});
   }
 });
 
@@ -78,9 +78,9 @@ app.get("/usuario/:id", async (req, res) => {
     },
   });
   if (userData) {
-    res.json(userData);
+    res.status(200).json(userData);
   } else {
-    res.status(404).send("No se pudo encontrar al usuario");
+    res.status(404).json({mensaje: "No se pudo encontrar al usuario"});
   }
 });
 
@@ -99,10 +99,10 @@ app.post("/usuario/login", async (req, res) => {
     if (userData) {
       res.json(userData);
     } else {
-      res.status(404).send("No se pudo encontrar al usuario");
+      res.status(404).json({mensaje:"No se pudo encontrar al usuario"});
     }
   } else {
-    res.status(400).send("Faltan datos requeridos");
+    res.status(500).json({mensaje: "Faltan datos requeridos"});
   }
 });
 
@@ -123,7 +123,7 @@ app.delete("/usuario/:id", async (req, res) => {
     });
     res.status(200).send("Usuario Eliminado correctamente");
   } catch (e) {
-    res.status(404).send(e);
+    res.status(404).json({mensaje:"No se pudo eliminar el usuario"});
   }
 });
 
@@ -136,9 +136,28 @@ app.put("/usuario/:id", async (req, res) => {
         id: id,
       },
     });
-    res.status(200).send("Usuario Eliminado correctamente");
+    res.status(200).send("Usuario actualizado correctamente");
   } catch (e) {
-    res.status(404).send(e);
+    res.status(404).json({mensaje:"No se pudo modificar el usuario/ No se encontro al usuario"});
+  }
+});
+
+// ACTUALIZAR USUARIO GENERAL (nombre, email, contraseña, dirección, etc.)
+app.put("/usuario/:id", async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+
+  try {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).send("Usuario no encontrado");
+    }
+
+    await usuario.update(data);
+    res.status(200).json(usuario);
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).send("Error del servidor");
   }
 });
 
@@ -156,11 +175,11 @@ app.put("/usuario/:id/desactivar", async (req, res) => {
     });
     res.status(202).json(usuarioMod);
   } else {
-    res.status(404).send("No se puedo desactivar al Usuario");
+    res.status(404).json({mensaje:"No se pudo desactivar el usuario/ No se encontro al usuario"});
   }
 });
 
-// PRODUCTO
+// PRODUCTO -----------------------------------------------------------------------------------------------------------------
 
 //CREAR PRODUCTO
 app.post("/producto", async (req, res) => {
@@ -177,7 +196,7 @@ app.post("/producto", async (req, res) => {
     const nuevo = await Producto.create(data);
     res.status(200).json(nuevo);
   } else {
-    res.status(400).send("Faltan datos requeridos/no se pudo crear");
+    res.status(400).json({mensaje: "Faltan datos requeridos/no se pudo crear"});
   }
 });
 
@@ -188,31 +207,21 @@ app.get("/producto", async (req, res) => {
 });
 
 
-//OBTENER PRODUCTOS MAS VENDIDOS DE TODAS LAS ORDENES
-app.get("/masvendidos", async (req, res) => {
+// OBTENER TOP 10 PRODUCTOS MÁS VENDIDOS
+app.get("/producto/masvendidos", async (req, res) => {
   try {
-    const resultados = await DetalleOrden.findAll({
-      attributes: [
-        "ProductoId",
-        [sequelize.fn("SUM", sequelize.col("cantidad")), "totalVendidos"],
-      ],
-      group: ["ProductoId"],
-      order: [[sequelize.fn("SUM", sequelize.col("cantidad")), "DESC"]],
-      include: [
-        {
-          model: Producto,
-          as: "producto",
-          attributes: ["nombre", "imgurl", "precioUnitario"],
-        },
-      ],
+    const productosMasVendidos = await Producto.findAll({
+      order: [["nventas", "DESC"]],
+      limit: 10,
+      attributes: ["id", "nombre", "nventas", "imgurl", "precioUnitario"],
     });
 
-    res.json(resultados);
+    res.status(200).json(productosMasVendidos);
   } catch (e) {
-    console.error("Error al obtener productos más vendidos:", e);
-    res.status(500).send("Error al obtener productos más vendidos");
+    res.status(500).json({mensaje: "Error al obtener productos más vendidos."});
   }
 });
+
 
 //OBTENER PRODUCTOS POR CATEGORIA
 app.get("/categoria/:id/producto", async (req, res) => {
@@ -228,7 +237,7 @@ app.get("/categoria/:id/producto", async (req, res) => {
     });
     res.json(data);
   } catch (e) {
-    res.status(404).send(e);
+    res.status(404).json({mensaje: "Error al obtener categorias con sus productos"});
   }
 });
 
@@ -285,7 +294,7 @@ app.get("/producto/buscar/:nom", async (req, res) => {
   }
 });
 
-//CATEGORIA
+//CATEGORIA -----------------------------------------------------------------------------------------------------------------
 
 //OBTENER CATEGORIA
 
@@ -306,7 +315,7 @@ app.post("/categoria", async (req, res) => {
   }
 });
 
-//CARRITO
+//CARRITO -----------------------------------------------------------------------------------------------------------------
 
 //CREAR CARRITO
 
@@ -428,7 +437,8 @@ app.post("/carrito/:carritoId/producto", async (req, res) => {
   }
 });
 
-//ORDEN
+//ORDEN -----------------------------------------------------------------------------------------------------------------
+//OBTENER ORDENES
 app.get("/orden", async (req, res) => {
   try {
     const ordenes = await Orden.findAll({
@@ -478,24 +488,24 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
     });
 
     if (!carrito || carrito.productos.length === 0) {
-      return res
-        .status(400)
-        .send("Error el carrito no existe")
+      return res.status(400).json({mensaje: 'el carrito no existe o está vacío'});
     }
 
+    // Validar stock
     for (const producto of carrito.productos) {
       const cantidadComprada = producto.DetalleCarrito.cantidad;
       if (producto.stock < cantidadComprada) {
-        return res.status(400).send(`No hay suficiente stock para el producto ${producto.nombre}. Stock disponible: ${producto.stock}, cantidad solicitada: ${cantidadComprada}`)
+        return res.status(400).json({mensaje: `No hay suficiente stock para el producto ${producto.nombre}. Stock disponible: ${producto.stock}, cantidad solicitada: ${cantidadComprada}`});
       }
     }
 
+    // Crear la orden
     const nuevaOrden = await Orden.create({
       usuarioId: usuarioId,
       fecha: new Date(),
     });
 
-
+    // Registrar productos y actualizar stock y nventas
     for (const producto of carrito.productos) {
       const cantidadComprada = producto.DetalleCarrito.cantidad;
 
@@ -508,21 +518,24 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
       });
 
       producto.stock -= cantidadComprada;
+      producto.nventas = producto.nventas + cantidadComprada; 
       await producto.save();
     }
 
     await recalcularTotalOrden(nuevaOrden.id);
 
+ 
     await DetalleCarrito.destroy({
       where: { CarritoId: carrito.id },
     });
 
     res.json({ id: nuevaOrden.id });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Error al generar la orden desde el carrito.");
+    res.status(500).json({mensaje: "Error al generar la orden desde el carrito."});
   }
 });
+
 
 
 //OBTENER ORDENES POR USUARIO
@@ -570,25 +583,6 @@ app.get("/orden/detalle/:ordenId", async (req, res) => {
     res.json(orden);
   } catch (e) {
     res.status(500).json({ mensaje: "Error al obtener la orden" });
-  }
-});
-
-// ACTUALIZAR USUARIO GENERAL (nombre, email, contraseña, dirección, etc.)
-app.put("/usuario/:id", async (req, res) => {
-  const id = req.params.id;
-  const data = req.body;
-
-  try {
-    const usuario = await Usuario.findByPk(id);
-    if (!usuario) {
-      return res.status(404).send("Usuario no encontrado");
-    }
-
-    await usuario.update(data);
-    res.status(200).json(usuario);
-  } catch (error) {
-    console.error("Error al actualizar usuario:", error);
-    res.status(500).send("Error del servidor");
   }
 });
 
