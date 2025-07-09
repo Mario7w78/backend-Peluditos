@@ -18,7 +18,7 @@ async function verificarAndSyncDatabase() {
   try {
     await sequelize.authenticate();
     console.log("Conexion exitosa con la BD");
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     //await sequelize.sync();
 
     // Crear usuario base si no existe
@@ -207,13 +207,13 @@ app.get("/producto", async (req, res) => {
 });
 
 
-// OBTENER TOP 10 PRODUCTOS MÁS VENDIDOS
+
 app.get("/producto/masvendidos", async (req, res) => {
   try {
     const productosMasVendidos = await Producto.findAll({
       order: [["nventas", "DESC"]],
       limit: 10,
-      attributes: ["id", "nombre", "nventas", "imgurl", "precioUnitario"],
+      attributes: ["id", "nombre", "nventas", "imgurl", "precioUnitario", "stock"],
     });
 
     res.status(200).json(productosMasVendidos);
