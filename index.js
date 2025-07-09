@@ -139,26 +139,7 @@ app.put("/usuario/:id", async (req, res) => {
     });
     res.status(200).send("Usuario actualizado correctamente");
   } catch (e) {
-    res.status(404).json({mensaje:"No se pudo modificar el usuario/ No se encontro al usuario"});
-  }
-});
-
-// ACTUALIZAR USUARIO GENERAL (nombre, email, contraseña, dirección, etc.)
-app.put("/usuario/:id", async (req, res) => {
-  const id = req.params.id;
-  const data = req.body;
-
-  try {
-    const usuario = await Usuario.findByPk(id);
-    if (!usuario) {
-      return res.status(404).send("Usuario no encontrado");
-    }
-
-    await usuario.update(data);
-    res.status(200).json(usuario);
-  } catch (error) {
-    console.error("Error al actualizar usuario:", error);
-    res.status(500).send("Error del servidor");
+    res.status(404).send(e);
   }
 });
 
@@ -243,7 +224,7 @@ app.put("/producto/:id", async (req, res) => {
 
 
 
-
+//OBTENER PRODUCTOS MAS VENDIDOS DE TODAS LAS ORDENES
 app.get("/producto/masvendidos", async (req, res) => {
   try {
     const productosMasVendidos = await Producto.findAll({
@@ -583,7 +564,7 @@ app.post("/orden/desde-carrito/:usuarioId", async (req, res) => {
 
     await recalcularTotalOrden(nuevaOrden.id);
 
- 
+
     await DetalleCarrito.destroy({
       where: { CarritoId: carrito.id },
     });
@@ -702,6 +683,25 @@ app.get("/orden/detalle/:ordenId", async (req, res) => {
     res.json(orden);
   } catch (e) {
     res.status(500).json({ mensaje: "Error al obtener la orden" });
+  }
+});
+
+// ACTUALIZAR USUARIO GENERAL (nombre, email, contraseña, dirección, etc.)
+app.put("/usuario/:id", async (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+
+  try {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      return res.status(404).send("Usuario no encontrado");
+    }
+
+    await usuario.update(data);
+    res.status(200).json(usuario);
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).send("Error del servidor");
   }
 });
 
