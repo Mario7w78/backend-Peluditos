@@ -8,6 +8,7 @@ import { Producto } from "./models/Producto.js";
 import { Orden } from "./models/Orden.js";
 import { DetalleCarrito } from "./models/detalleCarrito.js";
 import { DetalleOrden } from "./models/detalleOrden.js";
+import { Op } from "sequelize";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -131,7 +132,7 @@ app.put("/usuario/:id", async (req, res) => {
   const data = req.body
   try {
     const id = req.params.id;
-    await Usuario.update(data,{
+    await Usuario.update(data, {
       where: {
         id: id,
       },
@@ -187,6 +188,41 @@ app.get("/producto", async (req, res) => {
   res.status(200).json(productos);
 });
 
+//ELIMINAR PRODUCTOS
+app.delete("/producto/:id", async (req, res) => {
+  try {
+    await Producto.destroy({
+      where: {
+        id: req.params.id
+      }
+    });
+    res.status(200).json({ mensaje: "Producto eliminado correctamente!!" });
+  } catch (e) {
+    res.status(200).json({ mensaje: "Producto No encontrado / No se pudo eliminar correctamente" });
+
+  }
+
+
+});
+
+// MODIFICAR PRODUCTO
+app.put("/producto/:id", async (req, res) => {
+  try {
+    const producto = await Producto.findByPk(req.params.id);
+
+    if (!producto) {
+      return res.status(404).json({ mensaje: "Producto no encontrado." });
+    }
+
+    await producto.update(req.body);
+
+    res.status(200).json(producto);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error del servidor al actualizar producto." });
+  }
+});
+
+
 
 //OBTENER PRODUCTOS MAS VENDIDOS DE TODAS LAS ORDENES
 app.get("/masvendidos", async (req, res) => {
@@ -232,17 +268,63 @@ app.get("/categoria/:id/producto", async (req, res) => {
   }
 });
 
-//OBTENER PRODUCTOS POR NOMBRE (ruta específica para evitar conflicto)
-app.get("/producto/nombre/:nom", async (req, res) => {
+app.get("/producto/buscar/:buscar", async (req, res) => {
+  const { buscar } = req.params;
+
   try {
-    const data = await Producto.findOne({
-      where: {
-        nombre: req.params.nom,
-      },
-    });
-    res.json(data);
+    let productos = [];
+
+    // Si es un número, buscar por CategoriaId
+    if (!isNaN(buscar)) {
+      productos = await Producto.findAll({
+        where: { CategoriaId: parseInt(buscar) },
+        include: {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre"],
+        },
+      });
+    } else {
+      // Buscar por nombre de producto
+      productos = await Producto.findAll({
+        where: {
+          nombre: {
+            [Op.iLike]: `%${buscar}%`,
+          },
+        },
+        include: {
+          model: Categoria,
+          as: "categoria",
+          attributes: ["id", "nombre"],
+        },
+      });
+
+      // buscar por nombre de categoria
+      if (productos.length === 0) {
+        productos = await Producto.findAll({
+          include: {
+            model: Categoria,
+            as: "categoria",
+            where: {
+              nombre: {
+                [Op.iLike]: `%${buscar}%`,
+              },
+            },
+            attributes: ["id", "nombre"],
+          },
+        });
+      }
+    }
+
+    if (productos.length === 0) {
+      return res
+        .status(404)
+        .json({ mensaje: "No se encontraron productos." });
+    }
+
+    res.json(productos);
   } catch (e) {
-    res.status(404).send(e);
+    res.status(500).json({ mensaje: "Error en la búsqueda." });
   }
 });
 
@@ -261,29 +343,6 @@ app.get("/producto/:id", async (req, res) => {
   }
 });
 
-import { Op } from "sequelize"; // Asegúrate que esté importado
-
-// BÚSQUEDA POR NOMBRE PARCIAL
-app.get("/producto/buscar/:nom", async (req, res) => {
-  try {
-    const productos = await Producto.findAll({
-      where: {
-        nombre: {
-          [Op.iLike]: `%${req.params.nom}%`, // búsqueda parcial (insensible a mayúsculas)
-        },
-      },
-    });
-
-    if (productos.length === 0) {
-      return res.status(404).json({ mensaje: "No se encontraron productos." });
-    }
-
-    res.json(productos);
-  } catch (e) {
-    console.error("Error al buscar producto:", e);
-    res.status(500).json({ mensaje: "Error en la búsqueda." });
-  }
-});
 
 //CATEGORIA
 
@@ -434,9 +493,9 @@ app.get("/orden", async (req, res) => {
     const ordenes = await Orden.findAll({
       include: {
         model: Producto,
-        as: "productos", 
+        as: "productos",
         through: {
-          attributes: ["cantidad", "precioUnitario", "subtotal"], 
+          attributes: ["cantidad", "precioUnitario", "subtotal"],
         },
       },
     });
@@ -538,6 +597,66 @@ app.get("/orden/:usuarioId", async (req, res) => {
     res.json(ordenes);
   } catch (e) {
     res.status(404).send("no se encuentra la orden o el usuario");
+  }
+});
+
+
+//Buscar ordenes por id, por usuario, por productos
+app.get("/ordenes/buscar/:buscar", async (req, res) => {
+  const { buscar } = req.params;
+
+  try {
+    let ordenes = [];
+
+    // Si es un número, buscar por OrdenId
+    if (!isNaN(buscar)) {
+      ordenes = await Orden.findAll({
+        where: { id: parseInt(buscar) },
+        include: {
+          model: Producto,
+          as: "productos",
+        },
+      });
+    } else {
+      // Buscar por nombre de producto
+      ordenes = await Orden.findAll({
+        include: {
+          model: Producto,
+          as: "productos",
+          where: {
+            nombre: {
+              [Op.iLike]: `%${buscar}%`,
+            },
+          },
+          attributes: ["id", "nombre"],
+        },
+      });
+      // buscar por nombre de usuarios
+      if (ordenes.length === 0) {
+        ordenes = await Orden.findAll({
+          include: {
+            model: Usuario,
+            as: "usuario",
+            where: {
+              nombre: {
+                [Op.iLike]: `%${buscar}%`,
+              },
+            },
+            attributes: ["id", "nombre"],
+          },
+        });
+      }
+    }
+
+    if (ordenes.length === 0) {
+      return res
+        .status(404)
+        .json({ mensaje: "No se encontraron ordenes." });
+    }
+
+    res.json(ordenes);
+  } catch (e) {
+    res.status(500).json({ mensaje: "Error en la búsqueda." });
   }
 });
 
