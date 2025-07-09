@@ -602,7 +602,7 @@ app.get("/ordenes/buscar/:buscar", async (req, res) => {
     // Si es un número, buscar por OrdenId
     if (!isNaN(buscar)) {
       ordenes = await Orden.findAll({
-        where: { id: parseInt(buscar) },
+        where: { id: buscar},
         include: {
           model: Producto,
           as: "productos",
