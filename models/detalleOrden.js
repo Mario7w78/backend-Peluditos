@@ -30,6 +30,3 @@ Producto.belongsToMany(Orden, {
   through: DetalleOrden,
   as: "ordenes"
 });
-
-DetalleOrden.belongsTo(Producto);
-Producto.hasMany(DetalleOrden);
