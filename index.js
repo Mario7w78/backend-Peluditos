@@ -356,7 +356,7 @@ app.post("/categoria", async (req, res) => {
 app.delete("/categoria/:id", async (req, res) => {
   const id = req.params.id;
 
-  if (data.nombre) {
+  if (id) {
     await Categoria.destroy({
       where: { id: id,
       },
