@@ -352,6 +352,21 @@ app.post("/categoria", async (req, res) => {
   }
 });
 
+//Eliminar CATEGORIA
+app.post("/categoria/:id", async (req, res) => {
+  const id = req.params.id;
+
+  if (data.nombre) {
+    await Categoria.destroy({
+      where: { id: id,
+      },
+    });
+    res.status(200).json({mensaje: "Categoria eliminada correctamente"});
+  } else {
+    res.status(400).json({mensaje: "no se pudo eliminar"});
+  }
+});
+
 //CARRITO -----------------------------------------------------------------------------------------------------------------
 
 //CREAR CARRITO
