@@ -353,7 +353,7 @@ app.post("/categoria", async (req, res) => {
 });
 
 //Eliminar CATEGORIA
-app.post("/categoria/:id", async (req, res) => {
+app.delete("/categoria/:id", async (req, res) => {
   const id = req.params.id;
 
   if (data.nombre) {
